@@ -1,16 +1,17 @@
-import java.io.IOException;
-import java.util.ArrayList;
+import javax.crypto.SecretKey;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Base64;
 import java.util.Scanner;
 
 public interface AppMenu {
-    default void startMenu() throws IOException {
+    default void startMenu() throws Exception {
         Scanner sc = new Scanner(System.in);
         MenuUtils utils = new MenuUtils();
 
-        String fileName;
-
-        ArrayList<String> fileContent;
-        ArrayList<String> encryptedContent = new ArrayList<>();
+        String fileName, encodedSecretKey;
+        int userInputOption;
+        SecretKey secret;
 
         System.out.println("\n" +
                 "\n" +
@@ -27,18 +28,45 @@ public interface AppMenu {
                 "2. Decrypt a file \n" +
                 "3. Quit \n");
 
-        switch (sc.nextInt()) {
-            case 1:
-                break;
-            case 2:
-                break;
-            case 3:
-                System.out.println("Bye! :)");
-                break;
-            default:
-                System.out.println("Invalid option, please try again!");
-                startMenu();
-                break;
+        try {
+            userInputOption = sc.nextInt();
+            switch (userInputOption) {
+                case 1:
+                    sc.nextLine();
+                    System.out.println("Enter the file name: ");
+                    fileName = sc.nextLine();
+
+                    File file = new File(fileName);
+                    if (!file.exists()) {
+                        System.out.println("File not found :(");
+                        System.out.println("Please, enter a valid file name...");
+                        startMenu();
+                        break;
+                    }
+                    byte[] fileContent = Files.readAllBytes(file.toPath());
+
+                    secret = utils.randomEncryptionKey();
+                    encodedSecretKey = Base64.getEncoder().encodeToString(secret.getEncoded());
+                    System.out.println("Encryption key is: " + encodedSecretKey + " | - KEEP IT SAFE!!");
+                    utils.encryptFile(fileContent, secret);
+                    System.out.println("The encrypted file has been saved as ciphertext.txt");
+
+                    startMenu();
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    System.out.println("Bye! :)");
+                    break;
+                default:
+                    System.out.println("Invalid option, please try again!");
+                    startMenu();
+                    break;
+            }
+        } catch (Exception ex) {
+            System.out.println("Invalid !! please input a number between 1 and 3");
+            sc.nextLine();
+            startMenu();
         }
     }
 }
