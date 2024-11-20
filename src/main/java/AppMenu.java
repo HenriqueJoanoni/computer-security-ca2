@@ -1,5 +1,8 @@
 import javax.crypto.SecretKey;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Scanner;
@@ -9,7 +12,7 @@ public interface AppMenu {
         Scanner sc = new Scanner(System.in);
         MenuUtils utils = new MenuUtils();
 
-        String fileName, encodedSecretKey;
+        String fileName, encodedSecretKey, decodedSecretKey;
         int userInputOption;
         SecretKey secret;
 
@@ -33,7 +36,7 @@ public interface AppMenu {
             switch (userInputOption) {
                 case 1:
                     sc.nextLine();
-                    System.out.println("Enter the file name: ");
+                    System.out.println("Enter the file name to encrypt: ");
                     fileName = sc.nextLine();
 
                     File file = new File(fileName);
@@ -54,6 +57,31 @@ public interface AppMenu {
                     startMenu();
                     break;
                 case 2:
+                    sc.nextLine();
+                    System.out.print("Enter the filename to decrypt: ");
+                    fileName = sc.nextLine();
+
+                    File decrypted = new File(fileName);
+                    if (!decrypted.exists()) {
+                        System.out.println("File not found :(");
+                        System.out.println("Please, enter a valid file name...");
+                        startMenu();
+                        break;
+                    }
+
+                    byte[] encryptedContent;
+                    try (FileInputStream fis = new FileInputStream(fileName)) {
+                        encryptedContent = fis.readAllBytes();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    System.out.print("Enter the decryption key (in Base64 format): ");
+                    decodedSecretKey = sc.nextLine();
+                    utils.decryptFile(encryptedContent, decodedSecretKey);
+                    System.out.println("Your plaintext file has been saved as plaintext.txt");
+
+//                    startMenu();
                     break;
                 case 3:
                     System.out.println("Bye! :)");
