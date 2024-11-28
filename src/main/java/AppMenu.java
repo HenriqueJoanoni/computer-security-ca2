@@ -1,9 +1,7 @@
 import javax.crypto.SecretKey;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Scanner;
 
@@ -12,7 +10,7 @@ public interface AppMenu {
         Scanner sc = new Scanner(System.in);
         MenuUtils utils = new MenuUtils();
 
-        String fileName, encodedSecretKey, decodedSecretKey;
+        String encodedSecretKey, decodedSecretKey;
         int userInputOption;
         SecretKey secret;
 
@@ -36,18 +34,9 @@ public interface AppMenu {
             switch (userInputOption) {
                 case 1:
                     sc.nextLine();
-                    System.out.println("Enter the file name to encrypt: ");
-                    fileName = sc.nextLine();
+                    File fileToEncrypt = utils.validateFile("Enter the file name to encrypt: ", sc);
 
-                    File file = new File(fileName);
-                    if (!file.exists()) {
-                        System.out.println("File not found :(");
-                        System.out.println("Please, enter a valid file name...");
-                        startMenu();
-                        break;
-                    }
-                    byte[] fileContent = Files.readAllBytes(file.toPath());
-
+                    byte[] fileContent = utils.readFileContent(fileToEncrypt);
                     secret = utils.randomEncryptionKey();
                     encodedSecretKey = Base64.getEncoder().encodeToString(secret.getEncoded());
                     System.out.println("Encryption key is: " + encodedSecretKey + " | - KEEP IT SAFE!!");
@@ -56,21 +45,13 @@ public interface AppMenu {
 
                     startMenu();
                     break;
+
                 case 2:
                     sc.nextLine();
-                    System.out.print("Enter the filename to decrypt: ");
-                    fileName = sc.nextLine();
-
-                    File decrypted = new File(fileName);
-                    if (!decrypted.exists()) {
-                        System.out.println("File not found :(");
-                        System.out.println("Please, enter a valid file name...");
-                        startMenu();
-                        break;
-                    }
+                    File fileToDecrypt = utils.validateFile("Enter the filename to decrypt: ", sc);
 
                     byte[] encryptedContent;
-                    try (FileInputStream fis = new FileInputStream(fileName)) {
+                    try (FileInputStream fis = new FileInputStream(fileToDecrypt)) {
                         encryptedContent = fis.readAllBytes();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -81,7 +62,7 @@ public interface AppMenu {
                     utils.decryptFile(encryptedContent, decodedSecretKey);
                     System.out.println("Your plaintext file has been saved as plaintext.txt");
 
-//                    startMenu();
+                    startMenu();
                     break;
                 case 3:
                     System.out.println("Bye! :)");
